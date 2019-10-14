@@ -80,8 +80,31 @@ def compute_known_distributions(x_values, n_bins, normal, logNorm, exp, skewNorm
     return distributions
 
 
-def histogram_with_distributions(ax: plt.Axes, series: pd.Series, title: str, xlabel: str, ylabel: str, normal = True, logNorm = True, exp = True, skewNorm = True):
+def histogram(ax: plt.Axes, series: pd.Series, title = '', xlabel = '', ylabel = '', bins = 10):
+    ax.set_title(title)
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel(ylabel)
+    ax.hist(series, bins)
+        
+
+def histogram_with_distributions(ax: plt.Axes, series: pd.Series, title = '', xlabel = '', ylabel = '', normal = True, logNorm = False, exp = True, skewNorm = False):
     values = series.sort_values().values
     n, bins, patches = ax.hist(values, 20, density=True, edgecolor='grey')
     distributions = compute_known_distributions(values, bins, normal, logNorm, exp, skewNorm)
     multiple_line_chart(ax, values, distributions, title, xlabel, ylabel)
+    
+    
+def histogram_with_two_classes(ax: plt.Axes, series_1: pd.Series, series_2: pd.Series, title = '', xlabel = '', ylabel = '', label_classes = ['0', '1'], density = True):
+    ax.set_title(title)
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel(ylabel)
+    ax.hist([series_1, series_2], 'auto', density=density, label=label_classes)
+    ax.legend(loc='best')
+
+
+def scatter_with_two_classes(ax: plt.Axes, data_1: pd.Series, data_2: pd.Series, variable_1: str, variable_2: str):
+        ax.set_title("%s x %s"%(variable_1, variable_2))
+        ax.set_xlabel(variable_1)
+        ax.set_ylabel(variable_2)
+        ax.scatter(data_1[variable_1], data_1[variable_2])
+        ax.scatter(data_2[variable_1], data_2[variable_2])
