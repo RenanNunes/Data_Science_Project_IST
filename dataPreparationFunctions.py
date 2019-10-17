@@ -20,3 +20,6 @@ def get_missing_values(data):
         mv[var] = data[var].isna().sum()
         count_na += data[var].isna().sum()
     return mv, count_na
+
+def normalize_data(data):
+    return (data-data.min())/(data.max()-data.min())

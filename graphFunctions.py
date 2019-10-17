@@ -2,6 +2,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import scipy.stats as _stats
 import numpy as np
+import itertools
 
 
 def choose_grid(nr):
@@ -108,3 +109,27 @@ def scatter_with_two_classes(ax: plt.Axes, data_1: pd.Series, data_2: pd.Series,
         ax.set_ylabel(variable_2)
         ax.scatter(data_1[variable_1], data_1[variable_2])
         ax.scatter(data_2[variable_1], data_2[variable_2])
+        
+def plot_confusion_matrix(ax: plt.Axes, cnf_matrix: np.ndarray, classes_names: list, normalize: bool = False, title_complement = ''):
+    CMAP = plt.cm.Blues
+    if normalize:
+        total = cnf_matrix.sum(axis=1)[:, np.newaxis]
+        cm = cnf_matrix.astype('float') / total
+        title = 'Normalized confusion matrix ' + title_complement
+    else:
+        cm = cnf_matrix
+        title = 'Confusion matrix ' + title_complement
+    np.set_printoptions(precision=2)
+    tick_marks = np.arange(0, len(classes_names), 1)
+    ax.set_title(title)
+    ax.set_ylabel('True label')
+    ax.set_xlabel('Predicted label')
+    ax.set_xticks(tick_marks)
+    ax.set_yticks(tick_marks)
+    ax.set_xticklabels(classes_names)
+    ax.set_yticklabels(classes_names)
+    ax.imshow(cm, interpolation='nearest', cmap=CMAP)
+
+    fmt = '.2f' if normalize else 'd'
+    for i, j in itertools.product(range(cm.shape[0]), range(cm.shape[1])):
+        ax.text(j, i, format(cm[i, j], fmt), horizontalalignment="center")
