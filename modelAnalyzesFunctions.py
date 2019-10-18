@@ -76,3 +76,19 @@ def decision_tree_analyzes(X, y, min_samples_leaf, max_depths, criteria, rskf):
         graph.multiple_line_chart(axs[1, c], min_samples_leaf, sensitivity[criteria[c]], 'Decision Trees with %s criteria'%criteria[c], 'nr estimators', 'sensitivity', percentage=True)
     plt.show()
     return accuracy, sensitivity
+
+def get_max_accuracy_sensitivity_data(accuracy, sensitivity, max_depths, min_samples_leaf, criteria):
+    def get_max(main_data, second_data, max_depths, min_samples_leaf, criteria):
+        max_row = []
+        for d in max_depths:
+            max_row.append(max(main_data[criteria][d]))
+        max_data = max(max_row)
+        max_depth = max_depths[max_row.index(max(max_row))]
+        index_min_sample_leaf = np.where(main_data[criteria][max_depth] == max_data)[0][0]
+        min_sample_leaf = min_samples_leaf[index_min_sample_leaf]
+        return max_data, second_data[criteria][max_depth][index_min_sample_leaf], max_depth, min_sample_leaf
+    max_acc = {}
+    max_acc['acc'], max_acc['sens'], max_acc['max_depth'], max_acc['min_sample_leaf'] = get_max(accuracy, sensitivity, max_depths, min_samples_leaf, criteria)
+    max_sens = {}
+    max_sens['sens'], max_sens['acc'], max_sens['max_depth'], max_sens['min_sample_leaf'] = get_max(sensitivity, accuracy, max_depths, min_samples_leaf, criteria)
+    return max_acc, max_sens
