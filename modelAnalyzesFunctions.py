@@ -49,12 +49,14 @@ def decision_tree_analyzes(X, y, min_samples_leaf, max_depths, criteria, rskf):
         for max_d in max_depths:
             accuracy[c][max_d] = np.zeros((len(min_samples_leaf)))
             sensitivity[c][max_d] = np.zeros((len(min_samples_leaf)))
+            decision_trees[c][max_d] = []
 
     for train_index, test_index in rskf.split(X, y):
         X_train, X_test = X[train_index], X[test_index]
         y_train, y_test = y[train_index], y[test_index]
         for c in range(len(criteria)):
             crit = criteria[c]
+            trees = []
             for d in max_depths:
                 yvalues = []
                 recall = []
@@ -64,9 +66,10 @@ def decision_tree_analyzes(X, y, min_samples_leaf, max_depths, criteria, rskf):
                     prdY = tree.predict(X_test)
                     yvalues.append(metrics.accuracy_score(y_test, prdY))
                     recall.append(metrics.recall_score(y_test, prdY))
+                    trees.append(tree)
                 accuracy[crit][d] += yvalues
                 sensitivity[crit][d] += recall
-                decision_trees[crit][d] = tree
+                decision_trees[crit][d] = trees
 
     plt.figure()
     fig, axs = plt.subplots(2, 2, figsize=(16, 12), squeeze=False)
