@@ -40,10 +40,12 @@ def naive_bayes_analyzes(X, y, labels, estimators, rskf, title_complement= '- ')
 def decision_tree_analyzes(X, y, min_samples_leaf, max_depths, criteria, rskf):
     accuracy = {}
     sensitivity = {}
+    decision_trees = {}
 
     for c in criteria:
         accuracy[c] = {}
         sensitivity[c] = {}
+        decision_trees[c] = {}
         for max_d in max_depths:
             accuracy[c][max_d] = np.zeros((len(min_samples_leaf)))
             sensitivity[c][max_d] = np.zeros((len(min_samples_leaf)))
@@ -64,6 +66,7 @@ def decision_tree_analyzes(X, y, min_samples_leaf, max_depths, criteria, rskf):
                     recall.append(metrics.recall_score(y_test, prdY))
                 accuracy[crit][d] += yvalues
                 sensitivity[crit][d] += recall
+                decision_trees[crit][d] = tree
 
     plt.figure()
     fig, axs = plt.subplots(2, 2, figsize=(16, 12), squeeze=False)
@@ -75,7 +78,7 @@ def decision_tree_analyzes(X, y, min_samples_leaf, max_depths, criteria, rskf):
         graph.multiple_line_chart(axs[0, c], min_samples_leaf, accuracy[criteria[c]], 'Decision Trees with %s criteria'%criteria[c], 'nr estimators', 'accuracy', percentage=True)
         graph.multiple_line_chart(axs[1, c], min_samples_leaf, sensitivity[criteria[c]], 'Decision Trees with %s criteria'%criteria[c], 'nr estimators', 'sensitivity', percentage=True)
     plt.show()
-    return accuracy, sensitivity
+    return accuracy, sensitivity, decision_trees
 
 def get_max_accuracy_sensitivity_data(accuracy, sensitivity, max_depths, min_samples_leaf, criteria):
     def get_max(main_data, second_data, max_depths, min_samples_leaf, criteria):
