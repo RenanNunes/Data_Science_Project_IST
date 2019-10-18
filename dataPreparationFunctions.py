@@ -1,4 +1,6 @@
 import numpy as np
+import pandas as pd
+from imblearn.over_sampling import SMOTE
 
 
 def rejectable_variables(data, reject_treshold=0.9):
@@ -23,3 +25,15 @@ def get_missing_values(data):
 
 def normalize_data(data):
     return (data-data.min())/(data.max()-data.min())
+
+def data_balance(data, target_attribute, RANDOM_STATE = 42, RATIO = 'minority'):
+    smote = SMOTE(ratio=RATIO, random_state=RANDOM_STATE)
+    data_columns = data.columns
+    y = data.pop(target_attribute).values
+    X = data.values
+    smote_x, smote_y = smote.fit_sample(X, y)
+    smote_target_count = pd.Series(smote_y).value_counts()
+    oversampled = pd.concat([pd.DataFrame(smote_x),pd.DataFrame(smote_y)], axis=1)
+    oversampled.columns = data_columns
+    oversampled.index.name = 'id'
+    return oversampled, smote_target_count
