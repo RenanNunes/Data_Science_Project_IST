@@ -9,40 +9,62 @@ def choose_grid(nr):
     return (nr+3) // 4, 4
 
 
-def line_chart(ax: plt.Axes, series: pd.Series, title: str, xlabel: str, ylabel: str, percentage=False):
+def line_chart(ax: plt.Axes, series: pd.Series, title: str, xlabel: str, ylabel: str, percentage=False, y_interval=(-1, -1)):
     ax.set_title(title)
     ax.set_xlabel(xlabel)
     ax.set_ylabel(ylabel)
     if percentage:
         ax.set_ylim(0.0, 1.0)
+    elif y_interval != (-1, -1):
+        ax.set_ylim(y_interval)
     ax.plot(series)
 
 
-def multiple_line_chart(ax: plt.Axes, xvalues: list, yvalues: dict, title: str, xlabel: str, ylabel: str, percentage=False):
+def multiple_line_chart(ax: plt.Axes, xvalues: list, yvalues: dict, title: str, xlabel: str, ylabel: str, percentage=False, y_interval=(-1, -1)):
     legend: list = []
     ax.set_title(title)
     ax.set_xlabel(xlabel)
     ax.set_ylabel(ylabel)
     if percentage:
         ax.set_ylim(0.0, 1.0)
-
+    elif y_interval != (-1, -1):
+        ax.set_ylim(y_interval)
     for name, y in yvalues.items():
         ax.plot(xvalues, y)
         legend.append(name)
     ax.legend(legend, loc='best', fancybox = True, shadow = True)
 
+def double_line_chart_different_scales(ax: plt.Axes, xvalues: list, yvalues: pd.Series, yvalues2: pd.Series, title: str, xlabel: str, ylabel: str, ylabel2: str, percentage=False, y_interval=(-1, -1), percentage2=False, y_interval2=(-1,-1)):
+    ax2 = ax.twinx()
+    ax.set_title(title)
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel(ylabel, color='darkblue')
+    ax2.set_ylabel(ylabel2, color='darkorange')
+    if percentage:
+        ax.set_ylim(0.0, 1.0)
+    elif y_interval != (-1, -1):
+        ax.set_ylim(y_interval)
+    if percentage2:
+        ax2.set_ylim(0.0, 1.0)
+    elif y_interval2 != (-1, -1):
+        ax2.set_ylim(y_interval2)
+        
+    ax.plot(xvalues, yvalues, color='darkblue')
+    ax2.plot(xvalues, yvalues2, color='darkorange')
 
-def bar_chart(ax: plt.Axes, xvalues: list, yvalues: list, title: str, xlabel: str, ylabel: str, percentage=False):
+def bar_chart(ax: plt.Axes, xvalues: list, yvalues: list, title: str, xlabel: str, ylabel: str, percentage=False, y_interval=(-1, -1)):
     ax.set_title(title)
     ax.set_xlabel(xlabel)
     ax.set_ylabel(ylabel)
     ax.set_xticklabels(xvalues, rotation=0, fontsize='small')
     if percentage:
         ax.set_ylim(0.0, 1.0)
+    elif y_interval != (-1, -1):
+        ax.set_ylim(y_interval)
     ax.bar(xvalues, yvalues, edgecolor='grey')
 
 
-def multiple_bar_chart(ax: plt.Axes, xvalues: list, yvalues: dict, title: str, xlabel: str, ylabel: str, percentage=False):
+def multiple_bar_chart(ax: plt.Axes, xvalues: list, yvalues: dict, title: str, xlabel: str, ylabel: str, percentage=False, y_interval=(-1, -1)):
     ax.set_title(title)
     ax.set_xlabel(xlabel)
     ax.set_ylabel(ylabel)
@@ -51,6 +73,8 @@ def multiple_bar_chart(ax: plt.Axes, xvalues: list, yvalues: dict, title: str, x
     ax.set_xticklabels(xvalues, fontsize='small')
     if percentage:
         ax.set_ylim(0.0, 1.0)
+    elif y_interval != (-1, -1):
+        ax.set_ylim(y_interval)
     width = 0.8  # the width of the bars
     step = width / len(yvalues)
     k = 0

@@ -3,6 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.model_selection import RepeatedStratifiedKFold
 from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import GradientBoostingClassifier
 import sklearn.metrics as metrics
 import itertools
 import graphFunctions as graph
@@ -98,3 +99,54 @@ def get_max_accuracy_sensitivity_data(accuracy, sensitivity, max_depths, min_sam
     max_sens = {}
     max_sens['sens'], max_sens['acc'], max_sens['max_depth'], max_sens['min_sample_leaf'] = get_max(sensitivity, accuracy, max_depths, min_samples_leaf, criteria)
     return max_acc, max_sens
+
+def gradient_boosting(X, y, rskf):
+    accuracy = 0
+    recall = 0
+
+    for train_index, test_index in rskf.split(X, y):
+        X_train, X_test = X[train_index], X[test_index]
+        y_train, y_test = y[train_index], y[test_index]
+        boost = GradientBoostingClassifier()
+        boost.fit(X_train, y_train)
+        prdY = boost.predict(X_test)
+        accuracy += metrics.accuracy_score(y_test, prdY)
+        recall += metrics.recall_score(y_test, prdY)
+    accuracy /= rskf.get_n_splits()
+    recall /= rskf.get_n_splits()
+    
+    return accuracy, recall
+
+def gradiente_boosting_analyzes(X, y, range_variable, range_variable_name, rskf, *, learning_rate=0.1, n_estimators=100, max_depth=3, max_features=None):
+    accuracy = {}
+    recall = {}
+    for variable in range_variable:
+        accuracy[variable] = 0
+        recall[variable] = 0
+
+    for train_index, test_index in rskf.split(X, y):
+        X_train, X_test = X[train_index], X[test_index]
+        y_train, y_test = y[train_index], y[test_index]
+        for variable in range_variable:
+            parameters = {
+                'learning_rate': learning_rate,
+                'n_estimators': n_estimators,
+                'max_depth': max_depth,
+                'max_features': max_features,
+                range_variable_name: variable
+            }
+            boost = GradientBoostingClassifier(**parameters)
+            boost.fit(X_train, y_train)
+            prdY = boost.predict(X_test)
+            accuracy[variable] += metrics.accuracy_score(y_test, prdY)
+            recall[variable] += metrics.recall_score(y_test, prdY)
+
+    for variable in range_variable:
+        accuracy[variable] /= rskf.get_n_splits()
+        recall[variable] /= rskf.get_n_splits()
+
+    plt.figure()
+    graph.double_line_chart_different_scales(plt.gca(), range_variable, accuracy.values(), recall.values(), 'Gradient Boosting with different %s'%range_variable_name, range_variable_name, 'accuracy', 'sensitivity', y_interval=(0.75, 0.95), y_interval2=(0.75, 0.95))
+    plt.show()
+    
+    return accuracy, recall
