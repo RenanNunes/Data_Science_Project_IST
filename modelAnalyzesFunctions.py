@@ -54,8 +54,7 @@ def decision_tree_analyzes(X, y, min_samples_leaf, max_depths, criteria, rskf):
     for train_index, test_index in rskf.split(X, y):
         X_train, X_test = X[train_index], X[test_index]
         y_train, y_test = y[train_index], y[test_index]
-        for c in range(len(criteria)):
-            crit = criteria[c]
+        for crit in criteria:
             trees = []
             for d in max_depths:
                 yvalues = []
@@ -78,8 +77,8 @@ def decision_tree_analyzes(X, y, min_samples_leaf, max_depths, criteria, rskf):
         for max_d in max_depths:
             accuracy[criteria[c]][max_d] /= rskf.get_n_splits()
             sensitivity[criteria[c]][max_d] /= rskf.get_n_splits()
-        graph.multiple_line_chart(axs[0, c], min_samples_leaf, accuracy[criteria[c]], 'Decision Trees with %s criteria'%criteria[c], 'nr estimators', 'accuracy', percentage=True)
-        graph.multiple_line_chart(axs[1, c], min_samples_leaf, sensitivity[criteria[c]], 'Decision Trees with %s criteria'%criteria[c], 'nr estimators', 'sensitivity', percentage=True)
+        graph.multiple_line_chart(axs[0, c], min_samples_leaf, accuracy[criteria[c]], 'Decision Trees with %s criteria'%criteria[c], 'min samples leaf ', 'accuracy')
+        graph.multiple_line_chart(axs[1, c], min_samples_leaf, sensitivity[criteria[c]], 'Decision Trees with %s criteria'%criteria[c], 'min samples leaf', 'sensitivity')
     plt.show()
     return accuracy, sensitivity, decision_trees
 
