@@ -151,14 +151,14 @@ def random_forest_analyzes(X, y, range_variable, range_variable_name, rskf, *, n
     
     return accuracy, sensitivity
 
-def gradient_boosting(X, y, rskf):
+def gradient_boosting(X, y, rskf, *, learning_rate=0.1, n_estimators=100, max_depth=3, max_features=None):
     accuracy = 0
     recall = 0
 
     for train_index, test_index in rskf.split(X, y):
         X_train, X_test = X[train_index], X[test_index]
         y_train, y_test = y[train_index], y[test_index]
-        boost = GradientBoostingClassifier()
+        boost = GradientBoostingClassifier(learning_rate=learning_rate, n_estimators=n_estimators, max_depth=max_depth, max_features=max_features)
         boost.fit(X_train, y_train)
         prdY = boost.predict(X_test)
         accuracy += metrics.accuracy_score(y_test, prdY)
@@ -168,7 +168,7 @@ def gradient_boosting(X, y, rskf):
     
     return accuracy, recall
 
-def gradiente_boosting_analyzes(X, y, range_variable, range_variable_name, rskf, *, learning_rate=0.1, n_estimators=100, max_depth=3, max_features=None):
+def gradient_boosting_analyzes(X, y, range_variable, range_variable_name, rskf, *, learning_rate=0.1, n_estimators=100, max_depth=3, max_features=None):
     accuracy = {}
     recall = {}
     for variable in range_variable:
