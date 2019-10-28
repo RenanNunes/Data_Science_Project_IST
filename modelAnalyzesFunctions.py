@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 from sklearn.model_selection import RepeatedStratifiedKFold
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import GradientBoostingClassifier
+from sklearn.ensemble import RandomForestClassifier
 import sklearn.metrics as metrics
 import itertools
 import graphFunctions as graph
@@ -98,6 +99,57 @@ def get_max_accuracy_sensitivity_data(accuracy, sensitivity, max_depths, min_sam
     max_sens = {}
     max_sens['sens'], max_sens['acc'], max_sens['max_depth'], max_sens['min_sample_leaf'] = get_max(sensitivity, accuracy, max_depths, min_samples_leaf, criteria)
     return max_acc, max_sens
+
+def random_forest(X, y, rskf, *, n_estimators=10, max_depth=None, max_features="auto"):
+    accuracy = 0
+    sensitivity = 0
+
+    for train_index, test_index in rskf.split(X, y):
+        X_train, X_test = X[train_index], X[test_index]
+        y_train, y_test = y[train_index], y[test_index]
+        rf = RandomForestClassifier(n_estimators=n_estimators, max_depth=max_depth, max_features=max_features)
+        rf.fit(X_train, y_train)
+        prdY = rf.predict(X_test)
+        accuracy += metrics.accuracy_score(y_test, prdY)
+        sensitivity += metrics.recall_score(y_test, prdY)
+    accuracy /= rskf.get_n_splits()
+    sensitivity /= rskf.get_n_splits()
+    
+    return accuracy, sensitivity
+
+def random_forest_analyzes(X, y, range_variable, range_variable_name, rskf, *, n_estimators=10, max_depth=None, max_features="auto"):
+    accuracy = {}
+    sensitivity = {}
+    for variable in range_variable:
+        accuracy[variable] = 0
+        sensitivity[variable] = 0
+    
+    for train_index, test_index in rskf.split(X, y):
+        X_train, X_test = X[train_index], X[test_index]
+        y_train, y_test = y[train_index], y[test_index]
+        for variable in range_variable:  
+            param = {
+                "n_estimators": n_estimators,
+                "max_depth": max_depth,
+                "max_features": max_features,
+                range_variable_name: variable,
+            }
+            rf = RandomForestClassifier(**param)
+            rf.fit(X_train, y_train)
+            prdY = rf.predict(X_test)
+            
+            accuracy[variable] += metrics.accuracy_score(y_test, prdY)
+            sensitivity[variable] += metrics.recall_score(y_test, prdY)
+    
+    for variable in range_variable:
+        accuracy[variable] /= rskf.get_n_splits()
+        sensitivity[variable] /= rskf.get_n_splits()
+    
+    plt.figure()
+    graph.double_line_chart_different_scales(plt.gca(), range_variable, accuracy.values(), sensitivity.values(), 'Random Forests with different %s'%range_variable_name, range_variable_name, 'accuracy', 'sensitivity', y_interval=(0.75, 0.95), y_interval2=(0.75, 0.95))
+    plt.show()
+    
+    return accuracy, sensitivity
 
 def gradient_boosting(X, y, rskf):
     accuracy = 0
