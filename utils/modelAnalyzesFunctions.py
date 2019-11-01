@@ -7,7 +7,7 @@ from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.ensemble import RandomForestClassifier
 import sklearn.metrics as metrics
 import itertools
-import graphFunctions as graph
+from . import graphFunctions as graph
 
 def naive_bayes_analyzes(X, y, labels, estimators, rskf, title_complement= '- '):
     accuracy = {}

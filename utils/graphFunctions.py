@@ -48,7 +48,7 @@ def double_line_chart_different_scales(ax: plt.Axes, xvalues: list, yvalues: pd.
         ax2.set_ylim(0.0, 1.0)
     elif y_interval2 != (-1, -1):
         ax2.set_ylim(y_interval2)
-        
+     
     ax.plot(xvalues, yvalues, color='darkblue')
     ax2.plot(xvalues, yvalues2, color='darkorange')
 
