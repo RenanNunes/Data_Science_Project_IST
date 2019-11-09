@@ -5,9 +5,13 @@ from sklearn.model_selection import RepeatedStratifiedKFold
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.feature_selection import SelectKBest, f_classif
 import sklearn.metrics as metrics
+from sklearn import cluster
 import itertools
 from . import graphFunctions as graph
+from mlxtend.frequent_patterns import apriori, association_rules
+from sklearn.decomposition import PCA
 
 def naive_bayes_analyzes(X, y, labels, estimators, rskf, title_complement= '- '):
     accuracy = {}
@@ -201,3 +205,113 @@ def gradient_boosting_analyzes(X, y, range_variable, range_variable_name, rskf, 
     plt.show()
     
     return accuracy, recall
+
+def apriori_rules(dummified_df, minpaterns=10, minconf=0.9, minlengthrule=2, minsup=1):
+    frequent_itemsets = {}
+    while minsup>0:
+        minsup = minsup*0.9
+        frequent_itemsets = apriori(dummified_df, min_support=minsup, use_colnames=True)
+        if len(frequent_itemsets) >= minpaterns:
+            rules = association_rules(frequent_itemsets, metric="confidence", min_threshold=minconf)
+            rules["antecedent_len"] = rules["antecedents"].apply(lambda x: len(x))
+            if (len(rules[(rules['antecedent_len']>=minlengthrule)]) >= minpaterns):
+                break
+    patterns = len(frequent_itemsets)
+    bigger_patterns = len(rules[(rules['antecedent_len']>=2)])
+    avg_support = rules[(rules['antecedent_len']>=2)]['support'].mean()
+    avg_confidence = rules[(rules['antecedent_len']>=2)]['confidence'].mean()
+    avg_leverage = rules[(rules['antecedent_len']>=2)]['leverage'].mean()
+    avf_lift = rules[(rules['antecedent_len']>=2)]['lift'].mean()
+    return [patterns, bigger_patterns, avg_support, avg_confidence, avg_leverage, avf_lift], rules[(rules['antecedent_len']>=minlengthrule)]
+
+def pattern_mining_analyzes(data, df_target, num_features, num_bins, metrics):
+    y: np.ndarray = df_target.values
+    X: np.ndarray = data.values
+
+    results_cut = np.zeros((len(num_features), len(num_bins), len(metrics)))
+    results_qcut = np.zeros((len(num_features), len(num_bins), len(metrics)))
+
+    for k in range(len(num_features)):
+        for bins in range(len(num_bins)):
+            selector = SelectKBest(f_classif, k=num_features[k])
+            X_new = selector.fit_transform(X, y)
+
+            cols = selector.get_support(indices=True)
+
+            selected_df = data.iloc[:, cols].join(df_target)
+            selected_df.head()
+            newdf_cut = selected_df.copy()
+            newdf_qcut = selected_df.copy()
+            for col in newdf_cut:
+                if col not in ['class']: 
+                    ## Discretize according to the size of the bins
+                    newdf_cut[col] = pd.cut(newdf_cut[col],num_bins[bins],labels=range(num_bins[bins]))
+                    ## Discretize according to the number of the elements per bins (similar to quartiles)
+                    newdf_qcut[col] = pd.qcut(newdf_qcut[col],num_bins[bins],labels=range(num_bins[bins]))
+            dummylist_cut = []
+            dummylist_qcut = []
+            for att in newdf_cut:
+                if att in ['class', 'gender']: newdf_cut[att] = newdf_cut[att].astype('category')
+                if att in ['class', 'gender']: newdf_qcut[att] = newdf_qcut[att].astype('category')
+                dummylist_cut.append(pd.get_dummies(newdf_cut[[att]]))
+                dummylist_qcut.append(pd.get_dummies(newdf_qcut[[att]]))
+            dummified_df_cut = pd.concat(dummylist_cut, axis=1)
+            dummified_df_qcut = pd.concat(dummylist_qcut, axis=1)
+
+            results_cut[k, bins], rules_cut = apriori_rules(dummified_df_cut)
+            results_qcut[k, bins], rules_qcut = apriori_rules(dummified_df_qcut)
+
+    plot_results_cut = {}
+    plot_results_qcut = {}
+    for m in range(len(metrics)):
+        plot_results_cut[m] = {}
+        plot_results_qcut[m] = {}
+        for n in range(len(num_bins)):
+            plot_results_cut[m][num_bins[n]] = results_cut[:, n, m]
+            plot_results_qcut[m][num_bins[n]] = results_qcut[:, n, m]
+
+    fig, axs = plt.subplots(len(metrics), 2, figsize=(len(metrics)*3, 26))
+    plt.subplots_adjust(hspace=0.3)
+    for m in range(len(metrics)):
+        graph.multiple_line_chart(axs[m, 0], num_features, plot_results_cut[m], "Cut - " + metrics[m] + " by number of features and number of bins", "Number of features", metrics[m])
+        graph.multiple_line_chart(axs[m, 1], num_features, plot_results_qcut[m], "Qcut - " + metrics[m] + " by number of features and number of bins", "Number of features", metrics[m])
+    return results_cut, results_qcut
+
+def kmeans(X, y, n_clusters):
+    results = np.zeros((len(n_clusters), 5))
+    for i in range(len(n_clusters)):
+        kmeans = cluster.KMeans(n_clusters=n_clusters[i], random_state=1).fit(X)
+        y_pred = kmeans.labels_
+        value_counts = pd.Series(y_pred).value_counts()
+        results[i][0] = kmeans.inertia_
+        results[i][1] = metrics.silhouette_score(X, y_pred)
+        results[i][2] = value_counts[value_counts == 1].shape[0]
+        results[i][3] = metrics.adjusted_rand_score(y, y_pred)
+        results[i][4] = metrics.homogeneity_score(y, y_pred)
+
+    plt.figure()
+    graph.double_line_chart_different_scales(plt.gca(), n_clusters, results[:, 0], results[:, 1], "SSE and Silhouette in diffent number of clusters", "k", "Sum of squared errors", "Silhouette", y_interval=(550, 2100), y_interval2=(0,0.25))
+    return results
+
+def visualize_cluster_PCA(X, y, n_plot):
+    pca = PCA(n_components=2)
+    x_pca = pca.fit_transform(X)
+
+    fig, ax = plt.subplots(len(n_plot), 2, figsize=(14, 18))
+    plt.subplots_adjust(hspace = 0.3)
+    for i in range(len(n_plot)):
+        kmeans = cluster.KMeans(n_clusters=n_plot[i], random_state=1).fit(X)
+        y_pred = kmeans.labels_
+        x_new = np.concatenate((x_pca, y.reshape((len(y), 1)), y_pred.reshape((len(y), 1))), axis=1)
+
+        ax[i, 0].set_title("Real classes with PCA's axis")
+        ax[i, 0].set_xlabel("PCA 1")
+        ax[i, 0].set_ylabel("PCA 2")
+        for j in range(len(np.unique(y))):
+            ax[i, 0].scatter(x_new[x_new[:, 2] == j][:, 0], x_new[x_new[:, 2] == j][:, 1])
+
+        ax[i, 1].set_title(str(n_plot[i])+ " clusters with PCA's axis")
+        ax[i, 1].set_xlabel("PCA 1")
+        ax[i, 1].set_ylabel("PCA 2")
+        for j in range(len(np.unique(y_pred))):
+            ax[i, 1].scatter(x_new[x_new[:, 3] == j][:, 0], x_new[x_new[:, 3] == j][:, 1])
