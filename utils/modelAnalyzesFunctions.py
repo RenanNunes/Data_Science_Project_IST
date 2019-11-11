@@ -277,7 +277,7 @@ def pattern_mining_analyzes(data, df_target, num_features, num_bins, metrics):
         graph.multiple_line_chart(axs[m, 1], num_features, plot_results_qcut[m], "Qcut - " + metrics[m] + " by number of features and number of bins", "Number of features", metrics[m])
     return results_cut, results_qcut
 
-def kmeans(X, y, n_clusters):
+def kmeans(X, y, n_clusters, y_interval=(0, 2100), y_interval2=(0, 0.35)):
     results = np.zeros((len(n_clusters), 5))
     for i in range(len(n_clusters)):
         kmeans = cluster.KMeans(n_clusters=n_clusters[i], random_state=1).fit(X)
@@ -290,7 +290,7 @@ def kmeans(X, y, n_clusters):
         results[i][4] = metrics.homogeneity_score(y, y_pred)
 
     plt.figure()
-    graph.double_line_chart_different_scales(plt.gca(), n_clusters, results[:, 0], results[:, 1], "SSE and Silhouette in diffent number of clusters", "k", "Sum of squared errors", "Silhouette", y_interval=(550, 2100), y_interval2=(0,0.25))
+    graph.double_line_chart_different_scales(plt.gca(), n_clusters, results[:, 0], results[:, 1], "SSD and Silhouette in diffent number of clusters", "Number of clusters", "Sum of squared distances", "Silhouette", y_interval=y_interval, y_interval2=y_interval2)
     return results
 
 def visualize_cluster_PCA(X, y, n_plot):
