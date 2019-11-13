@@ -76,7 +76,7 @@ def knn_analyzes(X, y, nvalues, dist, rskf, title_complement = '', average='bina
         print('Sensitivity for n equal to', nvalues[aux], ':', format(recall['manhattan'][aux], '.4f'), '\n')
     return values, recall
 
-def decision_tree_analyzes(X, y, min_samples_leaf, max_depths, criteria, rskf):
+def decision_tree_analyzes(X, y, min_samples_leaf, max_depths, criteria, rskf, average='binary'):
     accuracy = {}
     sensitivity = {}
     decision_trees = {}
@@ -103,7 +103,7 @@ def decision_tree_analyzes(X, y, min_samples_leaf, max_depths, criteria, rskf):
                     tree.fit(X_train, y_train)
                     prdY = tree.predict(X_test)
                     yvalues.append(metrics.accuracy_score(y_test, prdY))
-                    recall.append(metrics.recall_score(y_test, prdY))
+                    recall.append(metrics.recall_score(y_test, prdY, average=average))
                     trees.append(tree)
                 accuracy[crit][d] += yvalues
                 sensitivity[crit][d] += recall
