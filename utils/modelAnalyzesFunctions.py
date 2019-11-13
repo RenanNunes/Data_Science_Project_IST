@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.model_selection import RepeatedStratifiedKFold
+from sklearn.neighbors import KNeighborsClassifier
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.ensemble import RandomForestClassifier
@@ -13,14 +14,14 @@ from . import graphFunctions as graph
 from mlxtend.frequent_patterns import apriori, association_rules
 from sklearn.decomposition import PCA
 
-def naive_bayes_analyzes(X, y, labels, estimators, rskf, title_complement= '- '):
+def naive_bayes_analyzes(X, y, labels, estimators, rskf, title_complement= '- ', average='binary'):
     accuracy = {}
     sensitivity = {}
     cnf_mtx = {}
     for clf in estimators:
         accuracy[clf] = 0
         sensitivity[clf] = 0
-        cnf_mtx[clf] = np.zeros((2, 2)).astype(int)
+        cnf_mtx[clf] = np.zeros((len(labels), len(labels))).astype(int)
     
     for train_index, test_index in rskf.split(X, y):
         X_train, X_test = X[train_index], X[test_index]
@@ -29,11 +30,11 @@ def naive_bayes_analyzes(X, y, labels, estimators, rskf, title_complement= '- ')
             estimators[clf].fit(X_train, y_train)
             prdY = estimators[clf].predict(X_test)
             accuracy[clf] += metrics.accuracy_score(y_test, prdY)
-            sensitivity[clf] += metrics.recall_score(y_test, prdY)
+            sensitivity[clf] += metrics.recall_score(y_test, prdY, average=average)
             cnf_mtx[clf] += metrics.confusion_matrix(y_test, prdY, labels)
     for clf in estimators:
-        accuracy[clf] /= n_splits*n_repeats
-        sensitivity[clf] /= n_splits*n_repeats
+        accuracy[clf] /= rskf.get_n_splits()
+        sensitivity[clf] /= rskf.get_n_splits()
         print("Accuracy for:", clf, ':', format(accuracy[clf], '.4f'))
         print("Sensitivity for:", clf, ':', format(sensitivity[clf], '.4f'))
         fig, axs = plt.subplots(1, 2, figsize=(8, 4), squeeze=False)
@@ -42,6 +43,38 @@ def naive_bayes_analyzes(X, y, labels, estimators, rskf, title_complement= '- ')
         plt.tight_layout()
         plt.show()
     return accuracy, sensitivity
+
+def knn_analyzes(X, y, nvalues, dist, rskf, title_complement = '', average='binary'):
+    values = {}
+    recall = {}
+    for d in dist:
+        values[d] = np.zeros(len(nvalues))
+        recall[d] = np.zeros(len(nvalues))
+
+    for train_index, test_index in rskf.split(X, y):
+        X_train, X_test = X[train_index], X[test_index]
+        y_train, y_test = y[train_index], y[test_index]
+        for d in dist:
+            yvalues = []
+            recall_values = []
+            for n in nvalues:
+                knn = KNeighborsClassifier(n_neighbors=n, metric=d)
+                knn.fit(X_train, y_train)
+                prdY = knn.predict(X_test)
+                yvalues.append(metrics.accuracy_score(y_test, prdY))
+                recall_values.append(metrics.recall_score(y_test, prdY, average=average))
+            values[d] += yvalues
+            recall[d] += recall_values
+    for d in dist:
+        values[d] /= rskf.get_n_splits()
+        recall[d] /= rskf.get_n_splits()
+    plt.figure()
+    graph.multiple_line_chart(plt.gca(), nvalues, values, 'KNN variants ' + title_complement, 'n', 'accuracy', percentage=True)
+    plt.show()
+    for aux in range(len(values['manhattan'])):
+        print('Accuracy for n equal to', nvalues[aux], ':', format(values['manhattan'][aux], '.4f'))
+        print('Sensitivity for n equal to', nvalues[aux], ':', format(recall['manhattan'][aux], '.4f'), '\n')
+    return values, recall
 
 def decision_tree_analyzes(X, y, min_samples_leaf, max_depths, criteria, rskf):
     accuracy = {}
