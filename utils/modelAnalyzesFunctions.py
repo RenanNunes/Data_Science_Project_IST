@@ -152,7 +152,7 @@ def get_max_accuracy_sensitivity_data(accuracy, sensitivity, max_depths, min_sam
     max_sens['sens'], max_sens['acc'], max_sens['max_depth'], max_sens['min_sample_leaf'] = get_max(sensitivity, accuracy, max_depths, min_samples_leaf, criteria)
     return max_acc, max_sens
 
-def random_forest(X, y, rskf, *, n_estimators=10, max_depth=None, max_features="auto"):
+def random_forest(X, y, rskf, *, n_estimators=10, max_depth=None, max_features="auto", average='binary'):
     accuracy = 0
     sensitivity = 0
 
@@ -163,13 +163,13 @@ def random_forest(X, y, rskf, *, n_estimators=10, max_depth=None, max_features="
         rf.fit(X_train, y_train)
         prdY = rf.predict(X_test)
         accuracy += metrics.accuracy_score(y_test, prdY)
-        sensitivity += metrics.recall_score(y_test, prdY)
+        sensitivity += metrics.recall_score(y_test, prdY, average=average)
     accuracy /= rskf.get_n_splits()
     sensitivity /= rskf.get_n_splits()
     
     return accuracy, sensitivity
 
-def random_forest_analyzes(X, y, range_variable, range_variable_name, rskf, *, n_estimators=10, max_depth=None, max_features="auto"):
+def random_forest_analyzes(X, y, range_variable, range_variable_name, rskf, *, n_estimators=10, max_depth=None, max_features="auto", average='binary'):
     accuracy = {}
     sensitivity = {}
     for variable in range_variable:
@@ -191,19 +191,19 @@ def random_forest_analyzes(X, y, range_variable, range_variable_name, rskf, *, n
             prdY = rf.predict(X_test)
             
             accuracy[variable] += metrics.accuracy_score(y_test, prdY)
-            sensitivity[variable] += metrics.recall_score(y_test, prdY)
+            sensitivity[variable] += metrics.recall_score(y_test, prdY, average=average)
     
     for variable in range_variable:
         accuracy[variable] /= rskf.get_n_splits()
         sensitivity[variable] /= rskf.get_n_splits()
     
     plt.figure()
-    graph.double_line_chart_different_scales(plt.gca(), range_variable, accuracy.values(), sensitivity.values(), 'Random Forests with different %s'%range_variable_name, range_variable_name, 'accuracy', 'sensitivity', y_interval=(0.75, 0.95), y_interval2=(0.75, 0.95))
+    graph.double_line_chart_different_scales(plt.gca(), range_variable, accuracy.values(), sensitivity.values(), 'Random Forests with different %s'%range_variable_name, range_variable_name, 'accuracy', 'sensitivity', y_interval=(0.65, 0.95), y_interval2=(0.65, 0.95))
     plt.show()
     
     return accuracy, sensitivity
 
-def gradient_boosting(X, y, rskf, *, learning_rate=0.1, n_estimators=100, max_depth=3, max_features=None):
+def gradient_boosting(X, y, rskf, *, learning_rate=0.1, n_estimators=100, max_depth=3, max_features=None, average='binary'):
     accuracy = 0
     recall = 0
 
@@ -214,13 +214,13 @@ def gradient_boosting(X, y, rskf, *, learning_rate=0.1, n_estimators=100, max_de
         boost.fit(X_train, y_train)
         prdY = boost.predict(X_test)
         accuracy += metrics.accuracy_score(y_test, prdY)
-        recall += metrics.recall_score(y_test, prdY)
+        recall += metrics.recall_score(y_test, prdY, average=average)
     accuracy /= rskf.get_n_splits()
     recall /= rskf.get_n_splits()
     
     return accuracy, recall
 
-def gradient_boosting_analyzes(X, y, range_variable, range_variable_name, rskf, *, learning_rate=0.1, n_estimators=100, max_depth=3, max_features=None):
+def gradient_boosting_analyzes(X, y, range_variable, range_variable_name, rskf, *, learning_rate=0.1, n_estimators=100, max_depth=3, max_features=None, average='binary'):
     accuracy = {}
     recall = {}
     for variable in range_variable:
@@ -242,14 +242,14 @@ def gradient_boosting_analyzes(X, y, range_variable, range_variable_name, rskf, 
             boost.fit(X_train, y_train)
             prdY = boost.predict(X_test)
             accuracy[variable] += metrics.accuracy_score(y_test, prdY)
-            recall[variable] += metrics.recall_score(y_test, prdY)
+            recall[variable] += metrics.recall_score(y_test, prdY, average=average)
 
     for variable in range_variable:
         accuracy[variable] /= rskf.get_n_splits()
         recall[variable] /= rskf.get_n_splits()
 
     plt.figure()
-    graph.double_line_chart_different_scales(plt.gca(), range_variable, accuracy.values(), recall.values(), 'Gradient Boosting with different %s'%range_variable_name, range_variable_name, 'accuracy', 'sensitivity', y_interval=(0.75, 0.95), y_interval2=(0.75, 0.95))
+    graph.double_line_chart_different_scales(plt.gca(), range_variable, accuracy.values(), recall.values(), 'Gradient Boosting with different %s'%range_variable_name, range_variable_name, 'accuracy', 'sensitivity', y_interval=(0.65, 0.95), y_interval2=(0.65, 0.95))
     plt.show()
     
     return accuracy, recall
