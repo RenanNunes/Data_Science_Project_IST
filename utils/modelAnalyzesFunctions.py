@@ -44,6 +44,21 @@ def naive_bayes_analyzes(X, y, labels, estimators, rskf, title_complement= '- ',
         plt.show()
     return accuracy, sensitivity
 
+def knn(X, y, n, dist, rskf):
+    acc = 0
+    recall = 0
+    for train_index, test_index in rskf.split(X, y):
+        X_train, X_test = X[train_index], X[test_index]
+        y_train, y_test = y[train_index], y[test_index]
+        knn = KNeighborsClassifier(n_neighbors=n, metric=dist)
+        knn.fit(X_train, y_train)
+        prdY = knn.predict(X_test)
+        acc += metrics.accuracy_score(y_test, prdY)
+        recall += metrics.recall_score(y_test, prdY)
+    acc /= rskf.get_n_splits()
+    recall /= rskf.get_n_splits()
+    return acc, recall
+
 def knn_analyzes(X, y, nvalues, dist, rskf, title_complement = '', average='binary'):
     values = {}
     recall = {}
