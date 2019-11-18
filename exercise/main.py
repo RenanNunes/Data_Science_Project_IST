@@ -1,8 +1,10 @@
 import sys
+import ast
+import functools as ft
 import pandas as pd
 import pdreport
 import ctreport
-# 10 PD preprocessing
+
 
 def report(source, dataframe, task):
     if source == 'PD':
@@ -22,6 +24,11 @@ def report(source, dataframe, task):
         return "Task error"
 
 
+def eval_input(total, elem):
+    total.append(ast.literal_eval(elem))
+    return total
+
+
 if __name__ == '__main__':
 
     '''A: read arguments'''
@@ -29,11 +36,11 @@ if __name__ == '__main__':
     n, _source, _task = int(args[0]), args[1], args[2]
     
     '''B: read dataset'''
-    a = sys.stdin.readline()
-    data, header = [], a.rstrip('\n').split(',')
+    data, header = [], sys.stdin.readline().rstrip('\n').split(',')
     for i in range(n-1):
-        data.append(sys.stdin.readline().rstrip('\n').split(','))    
+        line = sys.stdin.readline().rstrip('\n').split(',')
+        data.append(ft.reduce(eval_input, line, []))
     _dataframe = pd.DataFrame(data, columns=header)
 
     '''C: output results'''
-    print(report(_source, _dataframe, _task))
+    report(_source, _dataframe, _task)

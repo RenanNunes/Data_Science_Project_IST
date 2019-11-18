@@ -2,12 +2,22 @@ import pandas as pd
 
 
 def preprocessing(dataframe: pd.DataFrame):
-    report = ''
-    report += '1.Data exploration\n'
-    report += '1.1 Data Shape: ( ' + str(dataframe.shape[0]) + ' , ' + str(dataframe.shape[1]) + ' )\n'
-    report += '1.2 Data Head: \n'
-    # report += dataframe.head(10)
-    return report
+    print("1.Data exploration")
+    # Shape
+    print("1.1 Data Shape: %s" % (dataframe.shape,))
+    # Head
+    print("1.2 Data Head:")
+    print(dataframe.head())
+    # Type
+    print("1.3 Data Types:")
+    print(dataframe.dtypes.value_counts())
+    # Classes
+    if "class" in dataframe or "d" in dataframe:
+        print("1.4 Class count:")
+        print(dataframe["class"].value_counts())
+
+
+
 
 
 def unsupervised(dataframe: pd.DataFrame):
