@@ -2,8 +2,8 @@ import sys
 import ast
 import functools as ft
 import pandas as pd
-import pdreport
-import ctreport
+import exercise.pdreport as pdreport
+import exercise.ctreport as ctreport
 
 
 def report(source, dataframe, task):
@@ -25,7 +25,10 @@ def report(source, dataframe, task):
 
 
 def eval_input(total, elem):
-    total.append(ast.literal_eval(elem))
+    try:
+        total.append(ast.literal_eval(elem))
+    except:
+        total.append(elem)
     return total
 
 
