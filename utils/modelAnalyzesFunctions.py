@@ -16,18 +16,19 @@ from sklearn.decomposition import PCA
 from sklearn.model_selection import RepeatedStratifiedKFold
 
 
-def naive_bayes(x, y, estimator, rskf: RepeatedStratifiedKFold):
+def naive_bayes(x, y, estimator, rskf: RepeatedStratifiedKFold, average='binary'):
     accuracy = 0
     sensitivity = 0
     cnf_mtx = 0
+    labels = pd.unique(y)
     for train_index, test_index in rskf.split(x, y):
         x_train, x_test = x[train_index], x[test_index]
         y_train, y_test = y[train_index], y[test_index]
         estimator.fit(x_train, y_train)
         prd_y = estimator.predict(x_test)
         accuracy += metrics.accuracy_score(y_test, prd_y)
-        sensitivity += metrics.recall_score(y_test, prd_y)
-        cnf_mtx += metrics.confusion_matrix(y_test, prd_y)
+        sensitivity += metrics.recall_score(y_test, prd_y, average=average)
+        cnf_mtx += metrics.confusion_matrix(y_test, prd_y, labels)
     accuracy /= rskf.get_n_splits()
     sensitivity /= rskf.get_n_splits()
     total = cnf_mtx.sum(axis=1)[:, np.newaxis]
@@ -71,6 +72,7 @@ def knn(X, y, n, dist, rskf, average='binary'):
     acc = 0
     recall = 0
     cnf_mtx = 0
+    labels = pd.unique(y)
     for train_index, test_index in rskf.split(X, y):
         x_train, x_test = X[train_index], X[test_index]
         y_train, y_test = y[train_index], y[test_index]
@@ -79,7 +81,7 @@ def knn(X, y, n, dist, rskf, average='binary'):
         prd_y = knn_class.predict(x_test)
         acc += metrics.accuracy_score(y_test, prd_y)
         recall += metrics.recall_score(y_test, prd_y, average=average)
-        cnf_mtx += metrics.confusion_matrix(y_test, prd_y)
+        cnf_mtx += metrics.confusion_matrix(y_test, prd_y, labels)
     acc /= rskf.get_n_splits()
     recall /= rskf.get_n_splits()
     total = cnf_mtx.sum(axis=1)[:, np.newaxis]
@@ -121,10 +123,11 @@ def knn_analyzes(X, y, nvalues, dist, rskf, title_complement='', average='binary
     return values, recall
 
 
-def decision_tree(x, y, min_samples_leaf, max_depths, criteria, rskf):
+def decision_tree(x, y, min_samples_leaf, max_depths, criteria, rskf, average='binary'):
     acc = 0
     recall = 0
     cnf_mtx = 0
+    labels = pd.unique(y)
     for train_index, test_index in rskf.split(x, y):
         x_train, x_test = x[train_index], x[test_index]
         y_train, y_test = y[train_index], y[test_index]
@@ -132,8 +135,8 @@ def decision_tree(x, y, min_samples_leaf, max_depths, criteria, rskf):
         tree.fit(x_train, y_train)
         prd_y = tree.predict(x_test)
         acc += metrics.accuracy_score(y_test, prd_y)
-        recall += metrics.recall_score(y_test, prd_y)
-        cnf_mtx += metrics.confusion_matrix(y_test, prd_y)
+        recall += metrics.recall_score(y_test, prd_y, average=average)
+        cnf_mtx += metrics.confusion_matrix(y_test, prd_y, labels)
     acc /= rskf.get_n_splits()
     recall /= rskf.get_n_splits()
     total = cnf_mtx.sum(axis=1)[:, np.newaxis]
@@ -212,7 +215,7 @@ def random_forest(X, y, rskf, *, n_estimators=10, max_depth=None, max_features="
     accuracy = 0
     sensitivity = 0
     cnf_mtx = 0
-
+    labels = pd.unique(y)
     for train_index, test_index in rskf.split(X, y):
         x_train, x_test = X[train_index], X[test_index]
         y_train, y_test = y[train_index], y[test_index]
@@ -221,7 +224,7 @@ def random_forest(X, y, rskf, *, n_estimators=10, max_depth=None, max_features="
         prd_y = rf.predict(x_test)
         accuracy += metrics.accuracy_score(y_test, prd_y)
         sensitivity += metrics.recall_score(y_test, prd_y, average=average)
-        cnf_mtx += metrics.confusion_matrix(y_test, prd_y)
+        cnf_mtx += metrics.confusion_matrix(y_test, prd_y, labels)
     accuracy /= rskf.get_n_splits()
     sensitivity /= rskf.get_n_splits()
     total = cnf_mtx.sum(axis=1)[:, np.newaxis]
@@ -273,7 +276,7 @@ def gradient_boosting(X, y, rskf, *,
     accuracy = 0
     recall = 0
     cnf_mtx = 0
-
+    labels = pd.unique(y)
     for train_index, test_index in rskf.split(X, y):
         x_train, x_test = X[train_index], X[test_index]
         y_train, y_test = y[train_index], y[test_index]
@@ -283,7 +286,7 @@ def gradient_boosting(X, y, rskf, *,
         prd_y = boost.predict(x_test)
         accuracy += metrics.accuracy_score(y_test, prd_y)
         recall += metrics.recall_score(y_test, prd_y, average=average)
-        cnf_mtx += metrics.confusion_matrix(y_test, prd_y)
+        cnf_mtx += metrics.confusion_matrix(y_test, prd_y, labels)
     accuracy /= rskf.get_n_splits()
     recall /= rskf.get_n_splits()
     total = cnf_mtx.sum(axis=1)[:, np.newaxis]

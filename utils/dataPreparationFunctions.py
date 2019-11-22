@@ -28,6 +28,9 @@ def get_missing_values(data):
 
 
 def normalize_data(data):
+    a = data.max()-data.min()
+    a = a.where(a == 0).dropna()
+    data = data.drop(a.index, axis=1)
     return (data-data.min())/(data.max()-data.min())
 
 
@@ -45,8 +48,11 @@ def oversample(data, target_attribute, RANDOM_STATE = 42, RATIO = 'minority'):
 
 
 def undersample(data, target_attribute):
+    columns = data.columns
     under_sampler = RandomUnderSampler(random_state=42)
     y: np.ndarray = data.pop(target_attribute).values
     x: np.ndarray = data.values
     x_res, y_res = under_sampler.fit_resample(x, y)
-    return pd.concat([pd.DataFrame(x_res), pd.DataFrame(y_res)], axis=1)
+    result = pd.concat([pd.DataFrame(x_res), pd.DataFrame(y_res)], axis=1)
+    result.columns = columns
+    return result
