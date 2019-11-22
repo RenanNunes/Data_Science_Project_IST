@@ -25,6 +25,7 @@ def preprocessing(dataframe: pd.DataFrame):
     print()
     # Preprocessing
     _preprocess(dataframe, True, "2")
+    return
 
 
 def _preprocess(dataframe: pd.DataFrame, log: bool = False, log_number: str = "0"):
@@ -59,10 +60,6 @@ def _preprocess(dataframe: pd.DataFrame, log: bool = False, log_number: str = "0
         print(log_number + "." + str(count) + ".1 Data Shape: %s" % (dataframe.shape,))
 
     return dataframe, missing_values[1]
-
-
-def unsupervised(dataframe: pd.DataFrame):
-    return
 
 
 def classification(dataframe: pd.DataFrame):
@@ -182,3 +179,36 @@ def classification(dataframe: pd.DataFrame):
     # Comparative performance
     print("3 Comparative performance:")
     print(pd.DataFrame([pd.Series(accuracy), pd.Series(sensitivity)], ["Accuracy", "Sensitivity"]))
+    return
+
+
+def unsupervised(dataframe: pd.DataFrame):
+    dataframe, missing_values = _preprocess(dataframe)
+    print("1 Data Preprocessing:")
+    print("There was %d missing values" % missing_values)
+    print("The data was normalized")
+    print("The data was undersampled by the minority class")
+
+    print("2 Unsupervised:")
+    y = dataframe.pop('Cover_Type').values
+    x = dataframe.values
+
+    # Clustering
+    print("2.1 Clustering:")
+    print("2.1.1 Parameterization:")
+    print("Number of clusters: 3")
+    n_cluster = 3
+    print("Applying: K-Means")
+    results = modelAnalyze.kmean(x, y, n_cluster)
+    print("2.1.2 Results:")
+    print("Inertia: %.4f" % results[0])
+    print("Silhouette: %.4f" % results[1])
+    print("Adjusted Rand: %.4f" % results[3])
+    print("Homogeneity: %.4f" % results[4])
+
+    # Pattern Mining
+    # print("2.2 Pattern Mining:")
+    # print("2.2.1 Parameterization:")
+    # print("2.2.2 Results:")
+
+    return

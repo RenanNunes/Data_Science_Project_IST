@@ -412,14 +412,27 @@ def pattern_mining_analyzes(data, df_target, num_features, num_bins, metrics):
     return results_cut, results_qcut
 
 
-def kmeans(X, y, n_clusters, y_interval=(0, 2100), y_interval2=(0, 0.35)):
+def kmean(x, y, n_cluster):
+    results = np.zeros(5)
+    _kmeans = cluster.KMeans(n_clusters=n_cluster).fit(x)
+    y_pred = _kmeans.labels_
+    value_counts = pd.Series(y_pred).value_counts()
+    results[0] = _kmeans.inertia_
+    results[1] = metrics.silhouette_score(x, y_pred)
+    results[2] = value_counts[value_counts == 1].shape[0]
+    results[3] = metrics.adjusted_rand_score(y, y_pred)
+    results[4] = metrics.homogeneity_score(y, y_pred)
+    return results
+
+
+def kmeans(x, y, n_clusters, y_interval=(0, 2100), y_interval2=(0, 0.35)):
     results = np.zeros((len(n_clusters), 5))
     for i in range(len(n_clusters)):
-        _kmeans = cluster.KMeans(n_clusters=n_clusters[i], random_state=1).fit(X)
+        _kmeans = cluster.KMeans(n_clusters=n_clusters[i], random_state=1).fit(x)
         y_pred = _kmeans.labels_
         value_counts = pd.Series(y_pred).value_counts()
         results[i][0] = _kmeans.inertia_
-        results[i][1] = metrics.silhouette_score(X, y_pred)
+        results[i][1] = metrics.silhouette_score(x, y_pred)
         results[i][2] = value_counts[value_counts == 1].shape[0]
         results[i][3] = metrics.adjusted_rand_score(y, y_pred)
         results[i][4] = metrics.homogeneity_score(y, y_pred)

@@ -24,6 +24,7 @@ def preprocessing(dataframe: pd.DataFrame):
     print()
     # Preprocessing
     _preprocess(dataframe, True, "2")
+    return
 
 
 def _preprocess(dataframe: pd.DataFrame, log: bool = False, log_number: str = "0", *, correlation: float = 0.95):
@@ -207,17 +208,25 @@ def unsupervised(dataframe: pd.DataFrame):
     print("All variables with more than %.2f correlation were simplified into one variable" % correlation)
 
     print("2 Unsupervised:")
-
-    # Pattern Mining
-    print("2.1 Clustering:")
-    print("2.1.1 Parameterization:")
-    print("2.1.2 Results:")
+    y = dataframe.pop('class').values
+    x = dataframe.values
 
     # Clustering
-    print("2.2 Clustering:")
-    print("2.2.1 Parameterization:")
+    print("2.1 Clustering:")
+    print("2.1.1 Parameterization:")
     print("Number of clusters: 5")
+    n_cluster = 5
     print("Applying: K-Means")
-    print("2.2.2 Results:")
+    results = modelAnalyze.kmean(x, y, n_cluster)
+    print("2.1.2 Results:")
+    print("Inertia: %.4f" % results[0])
+    print("Silhouette: %.4f" % results[1])
+    print("Adjusted Rand: %.4f" % results[3])
+    print("Homogeneity: %.4f" % results[4])
+
+    # Pattern Mining
+    # print("2.2 Pattern Mining:")
+    # print("2.2.1 Parameterization:")
+    # print("2.2.2 Results:")
 
     return
